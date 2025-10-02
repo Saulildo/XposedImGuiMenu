@@ -14,7 +14,7 @@ import de.robv.android.xposed.XposedHelpers;
 
 public class Inject implements IXposedHookZygoteInit  {
     boolean loaded = false;
-    String app_name = "com.app.here"; // EDIT THIS BEFORE COMPILING
+    String app_name = "com.herogame.gplay.survival.lite"; // EDIT THIS BEFORE COMPILING
     String target_abi = Build.SUPPORTED_ABIS[0]; // SET THIS TO THE ABI YOU'RE TARGETING
     public static InputStream resourceStream(String name) {
         return Objects.requireNonNull(Inject.class.getClassLoader()).getResourceAsStream(name);
