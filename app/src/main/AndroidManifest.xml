@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <queries>
-        <package android:name="com.app.here" /> <!-- Package name of the app you want to inject -->
+        <package android:name="com.herogame.gplay.survival.lite" /> <!-- Package name of the app you want to inject -->
     </queries>
 
     <application
