@@ -15,7 +15,7 @@ android {
 
         ndk {
             // SET THIS TO THE ABI YOU WILL USE, DELETE THE OTHERS
-            abiFilters 'arm64-v8a', 'x86_64', 'armeabi-v7a', 'x86'
+            abiFilters 'arm64-v8a'
         }
 
 
