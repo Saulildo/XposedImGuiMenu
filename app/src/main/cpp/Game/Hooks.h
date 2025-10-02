@@ -17,5 +17,5 @@ float some_method(void* instance) {
 }
 
 void Hooks() {
-    HOOKD("0x123456", some_method);
+//    HOOKD("0x123456", some_method);
 }
