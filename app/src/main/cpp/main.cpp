@@ -1,4 +1,5 @@
 #include "includes.h"
+#include "ESP.h"
 
 EGLBoolean (*old_eglSwapBuffers)(...);
 EGLBoolean hook_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
@@ -23,6 +24,7 @@ EGLBoolean hook_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     NewFrame();
 
     DrawMenu();
+    RenderESP();
 
     EndFrame();
     Render();
