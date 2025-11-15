@@ -11,6 +11,8 @@
 
 #include "GameValues.h"
 
+// ===== Basic Unity-like structs =====
+
 // Basic vector to match UnityEngine.Vector3
 struct Vec3 {
     float x, y, z;
@@ -35,7 +37,8 @@ struct Il2CppList : Il2CppObject {
     void*        _syncRoot;
 };
 
-// Simple ESP settings
+// ===== ESP settings =====
+
 struct EspSettings {
     bool draw     = false;
     bool line     = true;
@@ -48,8 +51,9 @@ struct EspSettings {
 
 inline EspSettings gEsp;
 
-// Internal cached BNM handles
-inline bool         gEspInit = false;
+// ===== BNM handles (cached) =====
+
+inline bool gEspInit = false;
 
 // Classes
 inline BNM::Class   clsController;
@@ -67,20 +71,21 @@ inline BNM::Method<void*> mGetPosition;
 inline BNM::Method<void*> mCamGetMain;
 inline BNM::Method<void*> mCamWorldToScreen;
 
-// Initialize all reflection handles once
+// ===== Init BNM reflection for ESP =====
+
 inline void InitESP()
 {
     if (gEspInit) return;
 
-    auto asm_cs   = BNM::Assembly::Get(BNM_OBFUSCATE("Assembly-CSharp"));
-    clsController = asm_cs.GetClass(BNM_OBFUSCATE(""), BNM_OBFUSCATE("KMQZQTPUQNQ"));
+    // Game-specific controller class
+    clsController      = BNM::Class(BNM_OBFUSCATE(""), BNM_OBFUSCATE("KMQZQTPUQNQ"));
     fieldControllerList = clsController.GetField(BNM_OBFUSCATE("WKMVQWUNXMZ"));
 
-    auto asm_unity = BNM::Assembly::Get(BNM_OBFUSCATE("UnityEngine.CoreModule"));
-    clsComponent   = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Component"));
-    clsTransform   = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Transform"));
-    clsGameObject  = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("GameObject"));
-    clsCamera      = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Camera"));
+    // UnityEngine core classes
+    clsComponent  = BNM::Class(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Component"));
+    clsTransform  = BNM::Class(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Transform"));
+    clsGameObject = BNM::Class(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("GameObject"));
+    clsCamera     = BNM::Class(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Camera"));
 
     mGetTransform     = clsComponent.GetMethod(BNM_OBFUSCATE("get_transform"), 0);
     mGetPosition      = clsTransform.GetMethod(BNM_OBFUSCATE("get_position"), 0);
@@ -91,13 +96,15 @@ inline void InitESP()
     gEspInit = true;
 }
 
-// WorldToScreen using Camera.main.WorldToScreenPoint
+// ===== WorldToScreen using Camera.main.WorldToScreenPoint =====
+
 inline bool WorldToScreen(const Vec3& world, ImVec2& out)
 {
     InitESP();
 
-    // Camera.main (static, no args)
-    void* camObj = mCamGetMain[nullptr]();
+    // Camera.main – static method, no instance
+    // Just call it without setting instance; BNM treats nullptr as static
+    void* camObj = mCamGetMain();
     if (!camObj)
         return false;
 
@@ -123,6 +130,8 @@ inline bool WorldToScreen(const Vec3& world, ImVec2& out)
     return true;
 }
 
+// ===== Main ESP draw =====
+
 // Iterate all controllers from KMQZQTPUQNQ.WKMVQWUNXMZ and draw simple ESP
 inline void DrawESP()
 {
@@ -131,8 +140,8 @@ inline void DrawESP()
 
     InitESP();
 
-    // Static field, instance is nullptr
-    void** listPtr = fieldControllerList[nullptr].GetPointer();
+    // Static field, instance is nullptr – disambiguate operator[] by casting
+    void** listPtr = fieldControllerList[(void*)nullptr].GetPointer();
     if (!listPtr || !*listPtr)
         return;
 
@@ -195,4 +204,15 @@ inline void DrawESP()
             1.5f
         );
     }
+}
+
+// Keep old names used in various versions of main.cpp
+inline void DrawEsp()
+{
+    DrawESP();
+}
+
+inline void RenderESP()
+{
+    DrawESP();
 }
