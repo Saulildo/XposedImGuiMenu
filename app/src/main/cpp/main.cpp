@@ -23,7 +23,7 @@ EGLBoolean hook_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     NewFrame();
 
     DrawMenu();
-    RenderESP();
+    DrawEsp();
 
     EndFrame();
     Render();
