@@ -1,10 +1,15 @@
 #pragma once
 
-#include <cstdint>          
-#include <BNM-Android/BNM.hpp> 
-#include <imgui.h>          
-#include "GameValues.h"  
+#include <cstdint>
 
+#include <BNM/Loading.hpp>               
+#include <BNM/Class.hpp>
+#include <BNM/Field.hpp>
+#include <BNM/Method.hpp>
+#include <BNM/BasicMonoStructures.hpp>   
+
+#include <imgui.h>
+#include "GameValues.h"
 
 using namespace BNM;
 
