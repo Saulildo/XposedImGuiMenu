@@ -1,6 +1,10 @@
 #pragma once
 
-#include "GameValues.h"
+include <cstdint>          
+#include <BNM/Loading.hpp>  
+#include <imgui.h>          
+#include "GameValues.h"  
+
 
 using namespace BNM;
 
