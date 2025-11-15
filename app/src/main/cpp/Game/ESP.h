@@ -2,16 +2,15 @@
 
 #include <cstdint>
 
-#include <BNM/Loading.hpp>               
+#include <BNM/UserSettings/GlobalSettings.hpp>
+#include <BNM/Assembly.hpp>
 #include <BNM/Class.hpp>
 #include <BNM/Field.hpp>
 #include <BNM/Method.hpp>
-#include <BNM/BasicMonoStructures.hpp>   
 
 #include <imgui.h>
-#include "GameValues.h"
 
-using namespace BNM;
+#include "GameValues.h"
 
 // Basic vector to match UnityEngine.Vector3
 struct Vec3 {
@@ -25,93 +24,97 @@ struct Il2CppObject {
 };
 
 struct Il2CppArray : Il2CppObject {
-    void* bounds;
+    void*    bounds;
     uint32_t max_length;
-    void* vector[32]; // flexible array; we treat as pointer to data
+    void*    vector[32]; // flexible array; we treat as pointer to data
 };
 
 struct Il2CppList : Il2CppObject {
     Il2CppArray* _items;
-    int _size;
-    int _version;
-    void* _syncRoot;
+    int          _size;
+    int          _version;
+    void*        _syncRoot;
 };
 
 // Simple ESP settings
 struct EspSettings {
-    bool draw   = false;
-    bool line   = true;
-    bool name   = false;
+    bool draw     = false;
+    bool line     = true;
+    bool name     = false;
     bool distance = false;
-    bool hp     = false;
-    bool bones  = false;
-    bool zbox   = false;
+    bool hp       = false;
+    bool bones    = false;
+    bool zbox     = false;
 };
 
 inline EspSettings gEsp;
 
 // Internal cached BNM handles
-static bool      gEspInit           = false;
-static Class*    clsController      = nullptr;
-static Field*    fieldControllerList = nullptr;
+inline bool         gEspInit = false;
 
-static Class*    clsComponent       = nullptr;
-static Class*    clsTransform       = nullptr;
-static Class*    clsGameObject      = nullptr;
-static Class*    clsCamera          = nullptr;
+// Classes
+inline BNM::Class   clsController;
+inline BNM::Class   clsComponent;
+inline BNM::Class   clsTransform;
+inline BNM::Class   clsGameObject;
+inline BNM::Class   clsCamera;
 
-static Method*   mGetTransform      = nullptr;
-static Method*   mGetPosition       = nullptr;
-static Method*   mCamGetMain        = nullptr;
-static Method*   mCamWorldToScreen  = nullptr;
+// Fields
+inline BNM::Field<void*> fieldControllerList;
+
+// Methods (we treat all returns as void* and cast ourselves)
+inline BNM::Method<void*> mGetTransform;
+inline BNM::Method<void*> mGetPosition;
+inline BNM::Method<void*> mCamGetMain;
+inline BNM::Method<void*> mCamWorldToScreen;
 
 // Initialize all reflection handles once
-static void InitESP()
+inline void InitESP()
 {
     if (gEspInit) return;
 
-    auto* asm_cs     = Assembly::Get(BNM_OBFUSCATE("Assembly-CSharp"));
-    clsController    = asm_cs->GetClass(BNM_OBFUSCATE(""), BNM_OBFUSCATE("KMQZQTPUQNQ"));
-    fieldControllerList = clsController->GetField(BNM_OBFUSCATE("WKMVQWUNXMZ"));
+    auto asm_cs   = BNM::Assembly::Get(BNM_OBFUSCATE("Assembly-CSharp"));
+    clsController = asm_cs.GetClass(BNM_OBFUSCATE(""), BNM_OBFUSCATE("KMQZQTPUQNQ"));
+    fieldControllerList = clsController.GetField(BNM_OBFUSCATE("WKMVQWUNXMZ"));
 
-    auto* asm_unity  = Assembly::Get(BNM_OBFUSCATE("UnityEngine.CoreModule"));
-    clsComponent     = asm_unity->GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Component"));
-    clsTransform     = asm_unity->GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Transform"));
-    clsGameObject    = asm_unity->GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("GameObject"));
-    clsCamera        = asm_unity->GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Camera"));
+    auto asm_unity = BNM::Assembly::Get(BNM_OBFUSCATE("UnityEngine.CoreModule"));
+    clsComponent   = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Component"));
+    clsTransform   = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Transform"));
+    clsGameObject  = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("GameObject"));
+    clsCamera      = asm_unity.GetClass(BNM_OBFUSCATE("UnityEngine"), BNM_OBFUSCATE("Camera"));
 
-    mGetTransform    = clsComponent->GetMethod(BNM_OBFUSCATE("get_transform"), 0);
-    mGetPosition     = clsTransform->GetMethod(BNM_OBFUSCATE("get_position"), 0);
-    mCamGetMain      = clsCamera->GetMethod(BNM_OBFUSCATE("get_main"), 0);
+    mGetTransform     = clsComponent.GetMethod(BNM_OBFUSCATE("get_transform"), 0);
+    mGetPosition      = clsTransform.GetMethod(BNM_OBFUSCATE("get_position"), 0);
+    mCamGetMain       = clsCamera.GetMethod(BNM_OBFUSCATE("get_main"), 0);
     // Camera.WorldToScreenPoint(Vector3)
-    mCamWorldToScreen = clsCamera->GetMethod(BNM_OBFUSCATE("WorldToScreenPoint"), 1);
+    mCamWorldToScreen = clsCamera.GetMethod(BNM_OBFUSCATE("WorldToScreenPoint"), 1);
 
     gEspInit = true;
 }
 
 // WorldToScreen using Camera.main.WorldToScreenPoint
-static bool WorldToScreen(const Vec3& world, ImVec2& out)
+inline bool WorldToScreen(const Vec3& world, ImVec2& out)
 {
     InitESP();
-    if (!mCamGetMain || !mCamWorldToScreen) return false;
 
-    Object* camObj = mCamGetMain->Invoke(nullptr, nullptr);
-    if (!camObj) return false;
+    // Camera.main (static, no args)
+    void* camObj = mCamGetMain[nullptr]();
+    if (!camObj)
+        return false;
 
-    Vec3 pos = world;
-    void* args[] { &pos };
+    // Camera.WorldToScreenPoint(Vector3)
+    void* res = mCamWorldToScreen[camObj](world);
+    if (!res)
+        return false;
 
-    Object* resObj = mCamWorldToScreen->Invoke(camObj, args);
-    if (!resObj) return false;
-
-    Vec3 screen = *(Vec3*)resObj;
+    Vec3 screen = *reinterpret_cast<Vec3*>(res);
 
     // If behind camera
     if (screen.z <= 0.0f)
         return false;
 
-    float width  = (float)glWidth;
-    float height = (float)glHeight;
+    float width  = static_cast<float>(glWidth);
+    float height = static_cast<float>(glHeight);
 
     // Unity screen coordinates: (0,0) bottom-left
     // ImGui: (0,0) top-left
@@ -128,32 +131,34 @@ inline void DrawESP()
         return;
 
     InitESP();
-    if (!fieldControllerList) return;
 
-    Object* listObj = (Object*)fieldControllerList->GetValue(nullptr); // static field
-    if (!listObj) return;
+    // Static field, instance is nullptr
+    void** listPtr = fieldControllerList[nullptr].GetPointer();
+    if (!listPtr || !*listPtr)
+        return;
 
-    auto* list = (Il2CppList*)listObj;
-    if (!list->_items || list->_size <= 0) return;
+    auto* list = reinterpret_cast<Il2CppList*>(*listPtr);
+    if (!list->_items || list->_size <= 0)
+        return;
 
     auto* itemsArr = list->_items;
-    auto** items   = (Object**)itemsArr->vector;
+    auto** items   = reinterpret_cast<void**>(itemsArr->vector);
 
-    auto* drawList = ImGui::GetForegroundDrawList();
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
     for (int i = 0; i < list->_size; ++i)
     {
-        Object* ctrl = items[i];
+        void* ctrl = items[i];
         if (!ctrl) continue;
 
         // KMQZQTPUQNQ derives from MonoBehaviour -> Component
-        Object* trObj = mGetTransform->Invoke(ctrl, nullptr);
+        void* trObj = mGetTransform[ctrl]();
         if (!trObj) continue;
 
-        Object* posObj = mGetPosition->Invoke(trObj, nullptr);
+        void* posObj = mGetPosition[trObj]();
         if (!posObj) continue;
 
-        Vec3 worldPos = *(Vec3*)posObj;
+        Vec3  worldPos  = *reinterpret_cast<Vec3*>(posObj);
         ImVec2 screenPos;
 
         if (!WorldToScreen(worldPos, screenPos))
@@ -165,12 +170,13 @@ inline void DrawESP()
         // Draw line from bottom center
         if (gEsp.line) {
             drawList->AddLine(
-                ImVec2(glWidth / 2.0f, (float)glHeight),
+                ImVec2(glWidth / 2.0f, static_cast<float>(glHeight)),
                 screenPos,
-                IM_COL32((int)(bonesColor[0] * 255.0f),
-                         (int)(bonesColor[1] * 255.0f),
-                         (int)(bonesColor[2] * 255.0f),
-                         (int)(bonesColor[3] * 255.0f)),
+                IM_COL32(
+                    static_cast<int>(bonesColor[0] * 255.0f),
+                    static_cast<int>(bonesColor[1] * 255.0f),
+                    static_cast<int>(bonesColor[2] * 255.0f),
+                    static_cast<int>(bonesColor[3] * 255.0f)),
                 2.0f
             );
         }
