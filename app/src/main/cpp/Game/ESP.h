@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/Includes.h"
+#include "Includes.h"
 #include "GameValues.h"
 
 using namespace BNM;
