@@ -71,7 +71,7 @@ template<typename T> inline T &GetField(void *instance, uint64_t offset) {
 }
 
 // Some useful macros to avoid typing too much
-#define HOOK(offset, ptr, orig) DobbyHook((void *)(g_il2cppBaseMap.startAddress + string2Offset(offset)), (void *)ptr, (void **)&orig)
+#define DHOOK(offset, ptr, orig) DobbyHook((void *)(g_il2cppBaseMap.startAddress + string2Offset(offset)), (void *)ptr, (void **)&orig)
 #define HOOKD(offset, func) DobbyHook((void *)(g_il2cppBaseMap.startAddress + string2Offset(offset)), (void *)func, (void **)&old_##func)
 #define HOOKD_ABS(offset, func) DobbyHook((void *)(offset), (void *)func, (void **)&old_##func)
 #define HOOKD_NORIG(offset, func) DobbyHook((void *)(g_il2cppBaseMap.startAddress + string2Offset(offset)), (void *)func, NULL)
