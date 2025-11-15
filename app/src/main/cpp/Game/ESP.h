@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>          
-#include <BNM/BNM.hpp> 
+#include <BNM-Android/BNM.hpp> 
 #include <imgui.h>          
 #include "GameValues.h"  
 
