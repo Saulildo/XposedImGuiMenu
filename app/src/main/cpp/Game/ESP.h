@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #include <BNM/UserSettings/GlobalSettings.hpp>
-#include <BNM/Assembly.hpp>
 #include <BNM/Class.hpp>
 #include <BNM/Field.hpp>
 #include <BNM/Method.hpp>
