@@ -12,6 +12,7 @@
 #include <limits>
 #include <iostream>
 #include <chrono>
+#include <BNM/BNM.hpp>          
 #include <filesystem>
 #include <unordered_set>
 #include <utility>
@@ -53,3 +54,4 @@
 #include "Patches.h"
 #include "Hooks.h"
 #include "../Menu.h"
+#include "Game/ESP.h"   
