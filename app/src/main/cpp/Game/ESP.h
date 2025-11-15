@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>          
-#include <BNM/Loading.hpp>  
+#include <BNM/BNM.hpp> 
 #include <imgui.h>          
 #include "GameValues.h"  
 
