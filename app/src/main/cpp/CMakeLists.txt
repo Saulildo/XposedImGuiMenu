@@ -68,3 +68,5 @@ target_link_libraries(
         android
         log
 )
+
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -Wl,--allow-multiple-definition)
