@@ -47,7 +47,7 @@ void *hack_thread(void *) {
     } while (!unityMaps.isValid());
 
     // Initialize BNM after libil2cpp is present
-    BNM::Init(BNM_OBFUSCATE("libil2cpp.so"));
+  //  BNM::Init(BNM_OBFUSCATE("libil2cpp.so"));
 
     // input native function
     RegisterNativeFn nativeInjectEventFn = KittyScanner::findRegisterNativeFn(unityMaps, "nativeInjectEvent");
