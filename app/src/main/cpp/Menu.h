@@ -2,6 +2,9 @@
 
 using namespace ImGui;
 
+#include "Game/ESP.h"
+#include "Game/GameValues.h"
+
 void SetupImGui() {
     IMGUI_CHECKVERSION();
     CreateContext();
@@ -15,49 +18,29 @@ void SetupImGui() {
 
 void DrawMenu() {
     static bool showMenu = true;
-    SetNextWindowSize(ImVec2(400, 500), ImGuiCond_FirstUseEver);
-    if (Begin("Xposed Menu - com.herogame.gplay.survival.lite", &showMenu)) {
-        
-        // ESP Section
-        if (CollapsingHeader("ESP Settings")) {
-            Checkbox("Enable ESP", &g_ESPConfig.Draw);
-            
-            if (g_ESPConfig.Draw) {
-                Indent(20.0f);
-                Checkbox("Show Lines", &g_ESPConfig.Line);
-                Checkbox("Show HP", &g_ESPConfig.Hp);
-                Checkbox("Show Distance", &g_ESPConfig.Distance);
-                Checkbox("Show Bones", &g_ESPConfig.Bones);
-                Checkbox("Show Name", &g_ESPConfig.Name);
-                Checkbox("Show 3D Box", &g_ESPConfig.Box3D);
-                
-                Separator();
-                Text("Box Adjustments:");
-                SliderFloat("Top Position", &g_topPosFloat, 1.0f, 3.0f);
-                SliderFloat("Bottom Position", &g_botPosFloat, 0.0f, 1.0f);
-                SliderFloat("Distance Scale", &g_clappedFloat, 50.0f, 200.0f);
-                SliderFloat("Box Scale", &g_calculatedPositionFloat, 1.0f, 5.0f);
-                
-                Separator();
-                Text("Bone Color:");
-                ColorEdit4("Bones", g_BonesColor);
-                
-                Unindent(20.0f);
+    SetNextWindowSize(ImVec2(450, 600), ImGuiCond_FirstUseEver);
+    if (Begin("Menu", &showMenu)) {
+        if (CollapsingHeader("Player ESP")) {
+            Checkbox("Enable ESP", &esp_enabled);
+            if (esp_enabled) {
+                Checkbox("Draw ESP", &gEsp.draw);
+                if (gEsp.draw) {
+                    Indent();
+                    Checkbox("Lines", &gEsp.line);
+
+                    Separator();
+                    Text("ESP Configuration:");
+                    SliderFloat("Clamp Distance", &clappedFloat, 50.0f, 200.0f);
+                    SliderFloat("Top Position", &topPosFloat, 1.0f, 3.0f);
+                    SliderFloat("Bot Position", &botPosFloat, 0.0f, 1.0f);
+                    SliderFloat("Calc Position", &calculatedPositionFloat, 1.0f, 5.0f);
+
+                    ColorEdit4("Bones Color", bonesColor);
+                    Unindent();
+                }
             }
         }
-        
-        Separator();
-        
-        // Other features section (placeholder)
-        if (CollapsingHeader("Other Features")) {
-            Checkbox("Example feature", &some_feature);
-        }
-        
-        Separator();
-        
-        if (Button("Close Menu")) {
-            showMenu = false;
-        }
+
+        End();
     }
-    End();
 }
