@@ -2,8 +2,8 @@
 
 using namespace ImGui;
 
-#include "Game/ESP.h"
-#include "Game/GameValues.h"
+#include "ESP.h"
+#include "GameValues.h"
 
 void SetupImGui() {
     IMGUI_CHECKVERSION();
